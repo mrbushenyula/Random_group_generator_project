@@ -1,124 +1,129 @@
-import tkinter as tk
-from tkinter import messagebox, filedialog
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
 import random as rd
 import pandas as pd
 
-class GroupGenerator:
-    """Handles the logic for shuffling and grouping students."""
-    def __init__(self, course_name):
-        self.course_name = course_name.upper()
+# Set appearance mode and color theme
+ctk.set_appearance_mode("Dark")  # Options: "Light", "Dark", "System"
+ctk.set_default_color_theme("blue")
 
-    def create_groups(self, student_list, group_size):
-        if not student_list:
-            return "No students found in the list."
-        
-        if group_size <= 0:
-            return "Group size must be a positive number."
+class ModernGroupingApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-        # Create a copy and shuffle to ensure randomness
-        shuffled_list = student_list.copy()
-        rd.shuffle(shuffled_list)
-
-        result = f"--- {self.course_name} GROUPS ---\n"
-        
-        # Slice the list into groups of the specified size
-        for i in range(0, len(shuffled_list), group_size):
-            group = shuffled_list[i : i + group_size]
-            group_num = (i // group_size) + 1
-            
-            if len(group) == group_size:
-                result += f"\nGroup {group_num}:\n" + "\n".join(f"- {s}" for s in group) + "\n"
-            else:
-                result += f"\nRemaining Students (Incomplete Group):\n" + "\n".join(f"- {s}" for s in group) + "\n"
-        
-        return result
-
-class GroupingApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Lecturer's Grouping Tool")
-        self.root.geometry("500x650")
-        
+        self.title("ClassGroup Pro - Lecturer Edition")
+        self.geometry("1100x600")
         self.students = []
 
-        # --- Course Unit Input ---
-        tk.Label(root, text="Course Unit Name:", font=('Arial', 10, 'bold')).pack(pady=(10, 0))
-        self.course_entry = tk.Entry(root, width=40)
-        self.course_entry.insert(0, "e.g., Data Structures")
-        self.course_entry.pack(pady=5)
+        # --- Grid Layout (1x2) ---
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        # --- Group Size Input ---
-        tk.Label(root, text="Number of Students per Group:", font=('Arial', 10, 'bold')).pack(pady=(10, 0))
-        self.size_entry = tk.Entry(root, width=10)
-        self.size_entry.insert(0, "3")
-        self.size_entry.pack(pady=5)
-
-        # --- Student Input Section ---
-        tk.Frame(root, height=2, bd=1, relief=tk.SUNKEN).pack(fill=tk.X, padx=20, pady=15)
+        # --- SIDEBAR ---
+        self.sidebar_frame = ctk.CTkFrame(self, width=300, corner_radius=0)
+        self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
         
-        tk.Label(root, text="Add Student Manually:").pack()
-        self.name_entry = tk.Entry(root, width=40)
-        self.name_entry.pack(pady=5)
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="ClassGroup Pro", font=ctk.CTkFont(size=20, weight="bold"))
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
-        btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=5)
-        tk.Button(btn_frame, text="Add Individual", command=self.add_student).grid(row=0, column=0, padx=5)
-        tk.Button(btn_frame, text="Upload Excel List", command=self.upload_excel, bg="#D1E8FF").grid(row=0, column=1, padx=5)
+        # Inputs in Sidebar
+        self.course_label = ctk.CTkLabel(self.sidebar_frame, text="Course Unit Name:")
+        self.course_label.grid(row=1, column=0, padx=20, pady=(10, 0), sticky="w")
+        self.course_entry = ctk.CTkEntry(self.sidebar_frame, placeholder_text="e.g. Data Science 101", width=250)
+        self.course_entry.grid(row=2, column=0, padx=20, pady=(0, 10))
 
-        # --- Action Button ---
-        tk.Button(root, text="GENERATE GROUPS", command=self.generate, 
-                  bg="#28a745", fg="white", font=('Arial', 11, 'bold'), height=2, width=20).pack(pady=20)
+        self.size_label = ctk.CTkLabel(self.sidebar_frame, text="Students per Group:")
+        self.size_label.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="w")
+        self.size_entry = ctk.CTkEntry(self.sidebar_frame, width=250)
+        self.size_entry.insert(0, "3")
+        self.size_entry.grid(row=4, column=0, padx=20, pady=(0, 20))
 
-        # --- Results Output ---
-        self.result_box = tk.Text(root, height=15, width=55)
-        self.result_box.pack(padx=20, pady=10)
+        # Buttons
+        self.upload_btn = ctk.CTkButton(self.sidebar_frame, text="📂 Upload Excel", command=self.upload_excel, fg_color="#3d3d3d", hover_color="#575757")
+        self.upload_btn.grid(row=5, column=0, padx=20, pady=10)
 
+        self.generate_btn = ctk.CTkButton(self.sidebar_frame, text="🚀 Generate Groups", command=self.generate, font=ctk.CTkFont(weight="bold"))
+        self.generate_btn.grid(row=6, column=0, padx=20, pady=10)
+
+        self.clear_btn = ctk.CTkButton(self.sidebar_frame, text="Reset List", command=self.reset_app, fg_color="transparent", border_width=1)
+        self.clear_btn.grid(row=7, column=0, padx=20, pady=(50, 10))
+
+        # --- MAIN CONTENT AREA ---
+        self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(1, weight=1)
+
+        # Manual Entry Bar
+        self.entry_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.entry_frame.grid(row=0, column=0, pady=(0, 20), sticky="ew")
+        
+        self.name_entry = ctk.CTkEntry(self.entry_frame, placeholder_text="Enter student name manually...", width=400)
+        self.name_entry.pack(side="left", padx=(0, 10))
+        self.add_btn = ctk.CTkButton(self.entry_frame, text="Add Student", width=100, command=self.add_student)
+        self.add_btn.pack(side="left")
+
+        # Results Display
+        self.result_box = ctk.CTkTextbox(self.main_frame, font=("Consolas", 14))
+        self.result_box.grid(row=1, column=0, sticky="nsew")
+
+        # Status Bar
+        self.status_label = ctk.CTkLabel(self.main_frame, text="Ready: 0 students loaded", font=ctk.CTkFont(size=12))
+        self.status_label.grid(row=2, column=0, pady=(10, 0), sticky="w")
+
+    # Logic Methods
     def add_student(self):
         name = self.name_entry.get().strip()
         if name:
             self.students.append(name)
-            self.name_entry.delete(0, tk.END)
-            self.update_count()
-        else:
-            messagebox.showwarning("Warning", "Please enter a student name.")
-
+            self.name_entry.delete(0, 'end')
+            self.update_status()
+        
     def upload_excel(self):
         file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xlsx *.xls")])
         if file_path:
             try:
                 df = pd.read_excel(file_path)
-                # Reads the very first column for names
                 names = df.iloc[:, 0].dropna().astype(str).tolist()
                 self.students.extend(names)
-                self.update_count()
-                messagebox.showinfo("Success", f"Imported {len(names)} students successfully.")
+                self.update_status()
+                messagebox.showinfo("Success", f"Imported {len(names)} students.")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to read file: {e}")
 
-    def update_count(self):
-        # Optional: update UI to show how many students are loaded
-        count = len(self.students)
-        self.root.title(f"Grouping Tool - {count} Students Loaded")
+    def update_status(self):
+        self.status_label.configure(text=f"Total Students: {len(self.students)}")
+
+    def reset_app(self):
+        self.students = []
+        self.result_box.delete("1.0", "end")
+        self.update_status()
 
     def generate(self):
         course = self.course_entry.get().strip()
         try:
             size = int(self.size_entry.get())
-        except ValueError:
-            messagebox.showerror("Error", "Please enter a valid number for group size.")
+        except:
+            messagebox.showwarning("Input Error", "Check your group size number.")
             return
 
-        if not course or course == "e.g., Data Structures":
-            messagebox.showwarning("Warning", "Please enter a Course Unit name.")
+        if not self.students:
+            messagebox.showwarning("No Students", "Please add students first.")
             return
 
-        grouper = GroupGenerator(course)
-        final_text = grouper.create_groups(self.students, size)
+        shuffled = self.students.copy()
+        rd.shuffle(shuffled)
         
-        self.result_box.delete(1.0, tk.END)
-        self.result_box.insert(tk.END, final_text)
+        # UI Feedback: Clear and Display
+        self.result_box.delete("1.0", "end")
+        header = f"{'='*40}\nCOURSE: {course.upper()}\n{'='*40}\n\n"
+        self.result_box.insert("end", header)
+
+        for i in range(0, len(shuffled), size):
+            group = shuffled[i:i + size]
+            group_text = f"🔹 GROUP {(i//size)+1}\n" + "\n".join(f"  • {s}" for s in group) + "\n\n"
+            self.result_box.insert("end", group_text)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = GroupingApp(root)
-    root.mainloop()
+    app = ModernGroupingApp()
+    app.mainloop()
