@@ -61,6 +61,14 @@ class ModernGroupingApp(ctk.CTk):
         self.clear_btn = ctk.CTkButton(self.sidebar_frame, text="Reset Application", command=self.reset_app, fg_color="transparent", border_width=1, text_color=("#555555", "#aaaaaa"))
         self.clear_btn.grid(row=9, column=0, padx=20, pady=20, sticky="ew")
 
+        #apearence
+        self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance:", anchor="w")
+        self.appearance_mode_label.grid(row=9, column=0, padx=25, pady=(100, 0), sticky="ew")
+        self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, 
+                                                            values=["Dark", "Light", "System"],
+                                                            command=self.change_appearance_mode)
+        self.appearance_mode_optionemenu.grid(row=10, column=0, padx=20, pady=(5, 20), sticky="ew")
+
 
         # ===================================
         # === MAIN AREA (Right Panel) ===
@@ -85,7 +93,7 @@ class ModernGroupingApp(ctk.CTk):
         # Using Consolas font ensures alignment, corner_radius=10 makes it look modern
         self.result_box = ctk.CTkTextbox(self.main_frame, font=("Consolas", 15), corner_radius=10)
         self.result_box.grid(row=1, column=0, sticky="nsew")
-        self.result_box.insert("1.0", "\n  Ready to generate groups.\n  Add students or upload an Excel file to begin.")
+        self.result_box.insert("1.0", "\n  Ready to generate groups.\n  Add students or upload an Excel file to begin.\n please Make sure you download your group list this is a beta version no database attached to it thank you 😉")
         self.result_box.configure(state="disabled") # Make read-only initially
 
         # 3. Status Bar
@@ -103,6 +111,9 @@ class ModernGroupingApp(ctk.CTk):
         # Change color slightly if students are loaded
         color = "gray" if count == 0 else ctk.ThemeManager.theme["CTkLabel"]["text_color"]
         self.status_label.configure(text_color=color)
+
+    def change_appearance_mode(self, new_appearance_mode: str):
+        ctk.set_appearance_mode(new_appearance_mode)
 
     def add_student(self):
         name = self.name_entry.get().strip()
