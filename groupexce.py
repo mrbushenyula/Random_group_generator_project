@@ -52,7 +52,7 @@ class ModernGroupingApp(ctk.CTk):
         #Generate group button
         self.generate_btn = ctk.CTkButton(self.sidebar_frame, text="⚡ Generate Groups", command=self.generate, font=ctk.CTkFont(weight="bold"), height=45)
         self.generate_btn.grid(row=6, column=0, padx=20, pady=(10, 20), sticky="ew")
-        
+         
         # Download button (Initially Disabled)
         self.download_btn = ctk.CTkButton(self.sidebar_frame, text="💾 Download Results", command=self.download_results, state="disabled", fg_color="#2d8a4e", hover_color="#246e3e", height=40)
         self.download_btn.grid(row=7, column=0, padx=20, pady=(0, 20), sticky="ew")
@@ -87,14 +87,13 @@ class ModernGroupingApp(ctk.CTk):
         
         self.add_btn = ctk.CTkButton(self.entry_frame, text="Add Name", width=120, height=40, command=self.add_student)
         self.add_btn.pack(side="right", padx=10, pady=10)
-        self.name_entry.bind("<Return>", lambda event: self.add_student()) # Enable 'Enter' key to add
+        self.name_entry.bind("<Return>", lambda event: self.add_student()) 
 
         # 2. Results Area (Textbox)
-        # Using Consolas font ensures alignment, corner_radius=10 makes it look modern
         self.result_box = ctk.CTkTextbox(self.main_frame, font=("Consolas", 15), corner_radius=10)
         self.result_box.grid(row=1, column=0, sticky="nsew")
         self.result_box.insert("1.0", "\n  Ready to generate groups.\n  Add students or upload an Excel file to begin.\n please Make sure you download your group list this is a beta version no database attached to it thank you 😉")
-        self.result_box.configure(state="disabled") # Make read-only initially
+        self.result_box.configure(state="disabled") 
 
         # 3. Status Bar
         self.status_label = ctk.CTkLabel(self.main_frame, text="Status: 0 students loaded", font=ctk.CTkFont(size=12), anchor="w", text_color="gray")
@@ -108,7 +107,6 @@ class ModernGroupingApp(ctk.CTk):
     def update_status(self):
         count = len(self.students)
         self.status_label.configure(text=f"Status: {count} students ready for grouping.")
-        # Change color slightly if students are loaded
         color = "gray" if count == 0 else ctk.ThemeManager.theme["CTkLabel"]["text_color"]
         self.status_label.configure(text_color=color)
 
@@ -124,7 +122,7 @@ class ModernGroupingApp(ctk.CTk):
             # Temporarily enable textbox to show added message
             self.result_box.configure(state="normal")
             self.result_box.insert("end", f"\n  [+] Added: {name}")
-            self.result_box.see("end") # Scroll to bottom
+            self.result_box.see("end")
             self.result_box.configure(state="disabled")
 
         
